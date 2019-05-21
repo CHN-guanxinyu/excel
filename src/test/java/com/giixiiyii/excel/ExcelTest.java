@@ -42,7 +42,7 @@ public class ExcelTest {
             log("----------------------");
             log(sheet.getName());
             log(sheet.getSchema());
-            sheet.forEach(System.out::println);
+            sheet.forEach(this::log);
         });
     }
 
