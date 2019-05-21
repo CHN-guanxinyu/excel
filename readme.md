@@ -22,7 +22,7 @@ export(e.getBytes());
 Excel e = Excel.fromBytes(bytes);
 XSheet sheet;
 sheet = e.get(0);
-List schema = sheet.getSchema().getData(); //List(学号，姓名)
+List schema = sheet.getSchema(); //List(学号，姓名)
 sheet.get(0).get(0); //2010000000
 sheet.get(0).get(1); //Foo
 sheet.get(1).get(1); //Bar
