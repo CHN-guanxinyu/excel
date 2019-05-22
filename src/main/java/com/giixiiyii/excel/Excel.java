@@ -1,4 +1,4 @@
-package com.giixiiyii.excel;
+package com.utils;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class Excel extends ListSupport<Excel.XSheet> {
@@ -20,47 +21,57 @@ public class Excel extends ListSupport<Excel.XSheet> {
 
     public byte[] getBytes() throws IOException {
         Workbook wb = new HSSFWorkbook();
-        for (XSheet xSheet : this) {
-            Sheet sheet = wb.createSheet(xSheet.getName());
-            sheet.setDefaultColumnWidth(xSheet.getSchema().getWidth());
-
-            int i = 0;
-            createRow(wb, sheet, i++, xSheet.getSchema());
-            for (XSheet.Record record : xSheet)
-                createRow(wb, sheet, i++, record);
-        }
+        forEach(createSheet(wb));
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         wb.write(stream);
         return stream.toByteArray();
     }
-    void createRow(Workbook wb, Sheet sheet, int index, XSheet.Record record) {
-        Row row = sheet.createRow(index);
-        row.setHeightInPoints(record.getHeight());
 
-        Font font = wb.createFont();
-        font.setFontName(record.getFont());
-        if (record instanceof XSheet.Schema)
-            font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+    Consumer<XSheet> createSheet(Workbook wb){
+        return xSheet -> {
+            Sheet sheet = wb.createSheet(xSheet.getName());
+            sheet.setDefaultColumnWidth(xSheet.getSchema().getWidth());
 
-        CellStyle style = wb.createCellStyle();
-        style.setFont(font);
-        style.setFillForegroundColor(record.getBackground());
-        style.setFillPattern(CellStyle.SOLID_FOREGROUND);
-        style.setAlignment(CellStyle.ALIGN_CENTER);
-        style.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+            int[] i = {0};
+            createRow(wb, sheet, i[0]++).accept(xSheet.getSchema());
+            xSheet.forEach(createRow(wb, sheet, i[0]++));
+        };
+    }
 
-        short border = HSSFCellStyle.BORDER_THIN;
-        style.setBorderBottom(border);
-        style.setBorderLeft(border);
-        style.setBorderTop(border);
-        style.setBorderRight(border);
+    Consumer<XSheet.Record> createRow(Workbook wb, Sheet sheet, int index) {
+        return record -> {
+            Row row = sheet.createRow(index);
+            row.setHeightInPoints(record.getHeight());
 
-        Cell cell;
-        for (int i = 0; i < record.size(); i++) {
-            cell = row.createCell(i);
+            Font font = wb.createFont();
+            font.setFontName(record.getFont());
+            if (record instanceof XSheet.Schema)
+                font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+
+            CellStyle style = wb.createCellStyle();
+            style.setFont(font);
+            style.setFillForegroundColor(record.getBackground());
+            style.setFillPattern(CellStyle.SOLID_FOREGROUND);
+            style.setAlignment(CellStyle.ALIGN_CENTER);
+            style.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+
+            short border = HSSFCellStyle.BORDER_THIN;
+            style.setBorderBottom(border);
+            style.setBorderLeft(border);
+            style.setBorderTop(border);
+            style.setBorderRight(border);
+
+            int i = 0;
+            record.forEach(createCell(row, style, i++));
+        };
+    }
+
+    Consumer<String> createCell(Row row, CellStyle style, int i){
+        return item -> {
+            Cell cell = row.createCell(i);
             cell.setCellStyle(style);
-            cell.setCellValue(record.get(i));
-        }
+            cell.setCellValue(item);
+        };
     }
 
     public static Excel fromBytes(byte[] bytes) throws IOException {
@@ -68,15 +79,14 @@ public class Excel extends ListSupport<Excel.XSheet> {
 
         Excel excel = new Excel();
         Stream.iterate(0, n -> n + 1)
-            .limit(wb.getNumberOfSheets())
-            .map(wb::getSheetAt)
-            .forEach(wbSheet -> {
-                XSheet sheet = excel.newSheet().name(wbSheet.getSheetName());
-                Row titleRow = wbSheet.getRow(0);
-                sink(wbSheet.getRow(wbSheet.getTopRow()), sheet.getSchema());
-                for (int i = wbSheet.getTopRow() + 1; i <= wbSheet.getLastRowNum(); i++)
-                    sink(wbSheet.getRow(i), sheet.newRecord());
-            });
+                .limit(wb.getNumberOfSheets())
+                .map(wb::getSheetAt)
+                .forEach(wbSheet -> {
+                    XSheet sheet = excel.newSheet().name(wbSheet.getSheetName());
+                    sink(wbSheet.getRow(wbSheet.getTopRow()), sheet.getSchema());
+                    for (int i = wbSheet.getTopRow() + 1; i <= wbSheet.getLastRowNum(); i++)
+                        sink(wbSheet.getRow(i), sheet.newRecord());
+                });
         return excel;
     }
 
