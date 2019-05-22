@@ -19,11 +19,30 @@ export(e.getBytes());
 ```
 ## 导入excel
 ```
-Excel e = Excel.fromBytes(bytes);
-XSheet sheet;
-sheet = e.get(0);
-List schema = sheet.getSchema(); //List(学号，姓名)
-sheet.get(0).get(0); //2010000000
-sheet.get(0).get(1); //Foo
-sheet.get(1).get(1); //Bar
+byte[] bytes = import2Bytes();
+Excel excel = Excel.fromBytes(bytes);
+
+//        sheet   row    cell
+log(excel.get(0).get(1).get(1));
+
+excel.forEach(sheet -> {
+    log("----------------------");
+    log(sheet.getName());
+    log(sheet.getSchema());
+    sheet.forEach(this::log);
+});
+
+/**
+* 输出：
+* Bar
+* ----------------------
+* 基本信息
+* [学号, 姓名]
+* [2010000000, Foo]
+* [2010000001, Bar]
+* ----------------------
+* sheet-1
+* [foo, bar]
+* [0, 1]
+* [2, 4]
 ```
