@@ -7,6 +7,10 @@ import java.io.*;
 
 public class ExcelTest {
     @Test
+    public void exportEmpty() throws IOException {
+        export(new Excel().getBytes(), "D:/tmp/empty.xls");
+    }
+    @Test
     public void export() throws IOException {
         Excel e = new Excel();
         XSheet sheet;

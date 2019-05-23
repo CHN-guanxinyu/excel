@@ -1,4 +1,4 @@
-package com.utils;
+package com.giixiiyii.excel;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -21,6 +21,7 @@ public class Excel extends ListSupport<Excel.XSheet> {
 
     public byte[] getBytes() throws IOException {
         Workbook wb = new HSSFWorkbook();
+        if (isEmpty()) newSheet();
         forEach(createSheet(wb));
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         wb.write(stream);
