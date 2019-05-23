@@ -1,16 +1,19 @@
-package com.giixiiyii.excel;
+package io.github.tobetwo.excel;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import javafx.util.Pair;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Excel extends ListSupport<Excel.XSheet> {
@@ -33,15 +36,15 @@ public class Excel extends ListSupport<Excel.XSheet> {
             Sheet sheet = wb.createSheet(xSheet.getName());
             sheet.setDefaultColumnWidth(xSheet.getSchema().getWidth());
 
-            int[] i = {0};
-            createRow(wb, sheet, i[0]++).accept(xSheet.getSchema());
-            xSheet.forEach(createRow(wb, sheet, i[0]++));
+            createRow(wb, sheet).accept(new Pair(-1, xSheet.getSchema()));
+            zipWithIndex(xSheet).forEach(createRow(wb, sheet));
         };
     }
 
-    Consumer<XSheet.Record> createRow(Workbook wb, Sheet sheet, int index) {
-        return record -> {
-            Row row = sheet.createRow(index);
+    Consumer<Pair<Integer, XSheet.Record>> createRow(Workbook wb, Sheet sheet) {
+        return pair -> {
+            Row row = sheet.createRow(pair.getKey() + 1);
+            XSheet.Record record = pair.getValue();
             row.setHeightInPoints(record.getHeight());
 
             Font font = wb.createFont();
@@ -62,21 +65,24 @@ public class Excel extends ListSupport<Excel.XSheet> {
             style.setBorderTop(border);
             style.setBorderRight(border);
 
-            int i = 0;
-            record.forEach(createCell(row, style, i++));
+            zipWithIndex(record).forEach(createCell(row, style));
         };
     }
 
-    Consumer<String> createCell(Row row, CellStyle style, int i){
-        return item -> {
-            Cell cell = row.createCell(i);
+    Consumer<Pair<Integer, String>> createCell(Row row, CellStyle style) {
+        return pair -> {
+            Cell cell = row.createCell(pair.getKey());
             cell.setCellStyle(style);
-            cell.setCellValue(item);
+            cell.setCellValue(pair.getValue());
         };
+    }
+
+    List zipWithIndex(List list) {
+        return IntStream.range(0, list.size()).mapToObj(i -> new Pair(i, list.get(i))).collect(Collectors.toList());
     }
 
     public static Excel fromBytes(byte[] bytes) throws IOException {
-        HSSFWorkbook wb = new HSSFWorkbook(new ByteInputStream(bytes, bytes.length));
+        HSSFWorkbook wb = new HSSFWorkbook(new ByteArrayInputStream(bytes));
 
         Excel excel = new Excel();
         Stream.iterate(0, n -> n + 1)
@@ -171,7 +177,6 @@ public class Excel extends ListSupport<Excel.XSheet> {
             }
         }
 
-        //所有cell风格统一
         public class Record extends ListSupport<String> {
             public Record(Collection<String> data) {
                 appendAll(data);

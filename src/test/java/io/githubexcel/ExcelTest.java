@@ -1,6 +1,6 @@
-package com.giixiiyii.excel;
+package io.githubexcel;
 
-import com.giixiiyii.excel.Excel.XSheet;
+import io.github.tobetwo.excel.Excel;
 import org.junit.Test;
 
 import java.io.*;
@@ -13,7 +13,7 @@ public class ExcelTest {
     @Test
     public void export() throws IOException {
         Excel e = new Excel();
-        XSheet sheet;
+        Excel.XSheet sheet;
 
         sheet = e.newSheet().name("基本信息");
         sheet.getSchema().append("学号").append("姓名");
@@ -40,7 +40,7 @@ public class ExcelTest {
         Excel excel = Excel.fromBytes(bytes);
 
         //         sheet   row    cell
-        log(excel.get(0).get(1).get(1));
+//        log(excel.get(0).get(1).get(1));
 
         excel.forEach(sheet -> {
             log("----------------------");
