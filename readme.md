@@ -1,6 +1,14 @@
 # excel
 ## 导出excel
-
+添加依赖
+```
+<dependency>
+    <groupId>io.github.tobetwo</groupId>
+    <artifactId>tobetwo.excel</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
+</dependency>
+```
+使用
 ```
 Excel e = new Excel();
 XSheet sheet;
