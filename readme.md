@@ -1,5 +1,5 @@
 # excel
-## 导出excel
+## 使用
 添加依赖
 ```
 <dependency>
@@ -8,7 +8,7 @@
     <version>1.0.1</version>
 </dependency>
 ```
-使用
+### 导出
 ```
 Excel e = new Excel();
 XSheet sheet;
@@ -25,7 +25,7 @@ sheet.newRecord().add("2").add("4");
 
 export(e.getBytes());
 ```
-## 导入excel
+### 导入excel
 ```
 byte[] bytes = import2Bytes();
 Excel excel = Excel.fromBytes(bytes);
