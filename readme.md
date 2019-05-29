@@ -5,7 +5,7 @@
 <dependency>
     <groupId>io.github.tobetwo</groupId>
     <artifactId>tobetwo.excel</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 使用
